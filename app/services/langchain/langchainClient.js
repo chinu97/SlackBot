@@ -1,27 +1,29 @@
-const { ChatOpenAI } = require('@langchain/openai');
 const { ChatPromptTemplate } = require('@langchain/core/prompts');
 const { RunnableSequence, RunnablePassthrough } = require('@langchain/core/runnables');
 
 class LangchainClient {
     static instance = null;
 
-    constructor(vectorDbStore) {
+    constructor(vectorDbStore, llm, promptTemplate = null) {
         if (LangchainClient.instance) {
             return LangchainClient.instance;
         }
+
         this.vectorDbStore = vectorDbStore;
-        this.llm = new ChatOpenAI({ model: process.env.OPENAI_GPT_MODEL, temperature: 0 });
-        this.prompt = ChatPromptTemplate.fromMessages([
+        this.llm = llm;
+        this.prompt = promptTemplate || ChatPromptTemplate.fromMessages([
             ["system", "You are a helpful Slack assistant. Use the following context to answer the user's question. If you can't find a relevant answer in the context, respond with 'JIRA_TICKET_NEEDED' followed by a brief explanation of why a Jira ticket should be created."],
             ["human", "Context: {context}\n\nQuestion: {question}"]
         ]);
+
         LangchainClient.instance = this;
+
         console.log('LangChainClient initialized.');
     }
 
-    static getInstance(vectorDbStore) {
+    static getInstance(vectorDbStore, llm, promptTemplate = null) {
         if (!LangchainClient.instance) {
-            LangchainClient.instance = new LangchainClient(vectorDbStore);
+            LangchainClient.instance = new LangchainClient(vectorDbStore, llm, promptTemplate);
         }
         return LangchainClient.instance;
     }

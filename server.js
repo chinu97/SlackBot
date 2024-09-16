@@ -12,7 +12,7 @@ const startServer = async () => {
         });
         console.log('✅ Connected to MongoDB');
 
-        const langchainInstance = await langchainService.initLangchainClient();
+        const langchainInstance = await langchainService.initLangchainClient({embeddingProvider : process.env.VECTOR_EMBEDDINGS_PROVIDER, vectorStoreType : process.env.VECTOR_STORE});
         console.log('✅ LangChain client initialized with Pinecone');
 
         // Initialize the Slack Bolt app

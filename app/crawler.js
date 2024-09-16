@@ -95,7 +95,7 @@ async function scrapeWebsite(url) {
     }
 }
 
-langChainService.initLangchainClient()
+langChainService.initLangchainClient({embeddingProvider : process.env.VECTOR_EMBEDDINGS_PROVIDER, vectorStoreType : process.env.VECTOR_STORE})
     .then(() => {
         console.log("langchain Initialised successfully");
         scrapeWebsite(startingUrl)
