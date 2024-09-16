@@ -76,17 +76,13 @@ const processMessage = async (message, client) => {
             ]
         });
         console.log('Loading message posted:', loadingMessage.ts);
-
-        // Process the message with LangChain
-        console.log('Processing query with LangChain:', message.text);
         let llmResponse = await langchainService.processQuery(message.text);
-        console.log('LangChain response received:', llmResponse);
 
         // Handle Jira ticket creation if needed
         llmResponse = await handleLLMResponse(llmResponse, message.text);
 
         // Update the initial message with the final response
-        console.log('Updating loading message with final response:', llmResponse);
+        console.log('Updating loading message with final response');
         await client.chat.update({
             channel: message.channel,
             ts: loadingMessage.ts,

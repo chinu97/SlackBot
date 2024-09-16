@@ -34,7 +34,6 @@ class LangchainClient {
                 question: new RunnablePassthrough(),
                 context: async (input) => {
                     try {
-                        console.log('Performing similarity search for:', input.question);
                         const results = await this.vectorDbStore.similaritySearch(input.question, 10);
                         console.log('Similarity search completed. Number of results:', results.length);
                         const context = results.map(match => match.pageContent).join('\n');
