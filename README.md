@@ -7,7 +7,7 @@ This project is a Slack bot that integrates with LangChain to provide intelligen
 Features
 Slack Integration: Listens to and responds to messages in Slack.
 LangChain Integration: Uses LangChain to process queries and generate responses.
-Pinecone for Vector Search: Stores and retrieves embeddings from Pinecone.
+Pinecone for Vector Search: Stores and retrieves embeddings from Pinecone
 Jira Integration: Creates Jira tickets when relevant information is not found.
 
 Prerequisites
