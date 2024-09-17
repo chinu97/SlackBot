@@ -4,13 +4,14 @@ const { RunnableSequence, RunnablePassthrough } = require('@langchain/core/runna
 class LangchainClient {
     static instance = null;
 
-    constructor(vectorDbStore, llm, promptTemplate = null) {
+    constructor(vectorDbStore, llm, promptTemplate = null, actionHandlers = {}) {
         if (LangchainClient.instance) {
             return LangchainClient.instance;
         }
 
         this.vectorDbStore = vectorDbStore;
         this.llm = llm;
+        this.actionHandlers = actionHandlers; // Object that maps action keys to handler functions
         this.prompt = promptTemplate || ChatPromptTemplate.fromMessages([
             ["system", "You are a helpful Slack assistant. Use the following context to answer the user's question. If you can't find a relevant answer in the context, respond with 'JIRA_TICKET_NEEDED' followed by a brief explanation of why a Jira ticket should be created."],
             ["human", "Context: {context}\n\nQuestion: {question}"]
@@ -21,9 +22,9 @@ class LangchainClient {
         console.log('LangChainClient initialized.');
     }
 
-    static getInstance(vectorDbStore, llm, promptTemplate = null) {
+    static getInstance(vectorDbStore, llm, promptTemplate = null, actionHandlers = {}) {
         if (!LangchainClient.instance) {
-            LangchainClient.instance = new LangchainClient(vectorDbStore, llm, promptTemplate);
+            LangchainClient.instance = new LangchainClient(vectorDbStore, llm, promptTemplate, actionHandlers);
         }
         return LangchainClient.instance;
     }
@@ -50,14 +51,21 @@ class LangchainClient {
                 return { ...input, question: input?.question?.question };
             },
             this.prompt,
-            this.llm
+            this.llm,
+            async (output) => {
+                let content = output?.content;
+                if (content.includes('JIRA_TICKET_NEEDED')) {
+                    console.log('Action: Creating Jira ticket');
+                    content = await this.executeAction('createJiraTicket', content, query);
+                }
+                return content;
+            }
         ]);
 
         try {
             const response = await ragChain.invoke({ question: query });
             console.log('Response generated successfully from ragchain.');
-            const content = response?.content;
-            return content;
+            return response;
         } catch (error) {
             console.error('Error during response generation:', error.message);
             return "Error generating response.";
@@ -65,8 +73,6 @@ class LangchainClient {
     }
 
     async saveData(data, metadata, params) {
-        console.log('Saving data to vector store with metadata:', metadata);
-
         try {
             const document = { pageContent: data, metadata: metadata };
             await this.vectorDbStore.addDocuments([document], params);
@@ -74,6 +80,19 @@ class LangchainClient {
         } catch (error) {
             console.error('Error saving data to vector store:', error.message);
         }
+    }
+
+    async executeAction(action, content, query) {
+        if (this.actionHandlers[action]) {
+            try {
+                return await this.actionHandlers[action](content, query);
+            } catch (error) {
+                console.error(`Error executing action ${action}:`, error.message);
+            }
+        } else {
+            console.log(`No handler defined for action: ${action}`);
+        }
+        return content;
     }
 }
 

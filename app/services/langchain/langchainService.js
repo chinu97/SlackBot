@@ -2,6 +2,7 @@ const LangChainClient = require("./langchainClient");
 const PineconeStore = require("../../repository/vectorStores/pineconeStore");
 const {OpenAIEmbeddings, ChatOpenAI} = require("@langchain/openai");
 const pineconeService = require("../pinecone/pineconeService");
+const actions = require("../actionHandlers");
 let langchainInstance = null;
 const initLangchainClient = async (options = {}) => {
     const {embeddingProvider, vectorStoreType} = options;
@@ -23,7 +24,7 @@ const initLangchainClient = async (options = {}) => {
             await pineconeService.checkAndCreatePineconeIndex(process.env.PINECONE_INDEX);
             break;
     }
-    langchainInstance = LangChainClient.getInstance(vectorStore, llm);
+    langchainInstance = LangChainClient.getInstance(vectorStore, llm, null,  actions.actionHandlers);
     return langchainInstance;
 };
 
